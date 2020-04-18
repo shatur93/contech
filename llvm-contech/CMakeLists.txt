@@ -22,6 +22,8 @@ add_llvm_pass_plugin(LLVMContech
   LoopIV.cpp
   Path.cpp
   Support.cpp
+  AAPass.cpp
+  AAEval.cpp
   )
 
 target_link_libraries(LLVMContech)

@@ -18,6 +18,7 @@
 #include "../common/eventLib/ct_event_st.h"
 #include "llvm/IR/GetElementPtrTypeIterator.h"
 #include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 
 //#define DEBUG_PRINT_CALLINST
 #ifdef DEBUG_PRINT_CALLINST
@@ -28,6 +29,8 @@
 //#define SPLIT_DEBUG
 
 //#define DISABLE_MEM
+
+#define LLVM_ALIAS_PASS
 
 #define __ctStrCmp(x, y) strncmp(x, y, sizeof(y) - 1)
 
@@ -309,6 +312,7 @@ namespace llvm {
 
         void getAnalysisUsage(AnalysisUsage &AU) const;
         LoopInfo* getAnalysisLoopInfo(Function&);
+        AAResults* getAnalysisAliasInfo(Function &);
         ScalarEvolution* getAnalysisSCEV(Function&);
         void collectLoopExits(Function* fblock, std::map<int, Loop*>& loopmap, LoopInfo*);
         Loop* isLoopEntry(BasicBlock* bb, std::unordered_set<Loop*>& lps);

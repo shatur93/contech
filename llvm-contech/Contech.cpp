@@ -51,6 +51,7 @@
 #include "BufferCheckAnalysis.h"
 #include "Contech.h"
 #include "LoopIV.h"
+#include "AAPass.h"
 
 using namespace llvm;
 using namespace std;
@@ -323,6 +324,7 @@ void Contech::getAnalysisUsage(AnalysisUsage& AU) const {
     AU.addRequired<LoopInfoWrapperPass>();
     AU.addPreserved<LoopInfoWrapperPass>();
     AU.addRequired<DominatorTreeWrapperPass>();
+    AU.addRequired<AAResultsWrapperPass>();
     
     // The following approach is taken from several other LLVM provided passes.
     extern char &LoopSimplifyID;
@@ -337,6 +339,10 @@ LoopInfo* Contech::getAnalysisLoopInfo(Function& F)
 ScalarEvolution* Contech::getAnalysisSCEV(Function& F)
 {
     return &getAnalysis<ScalarEvolutionWrapperPass>(F).getSE();
+}
+
+AAResults* Contech::getAnalysisAliasInfo(Function &F) {
+    return &getAnalysis<AAResultsWrapperPass>(F).getAAResults();
 }
 
 //
@@ -516,6 +522,14 @@ bool Contech::runOnModule(Module &M)
         int num_checks = 0;
         int origin_checks = 0;
         // Now instrument each basic block in the function
+
+#ifdef LLVM_ALIAS_PASS
+        AAPass* aap = new AAPass(this);
+        aap->InitializePass();
+        aap->runOnFunction(*F);
+        aap->DumpPassOutput();
+#endif
+
         for (Function::iterator B = F->begin(), BE = F->end(); B != BE; ++B) 
         {
             BasicBlock &pB = *B;
