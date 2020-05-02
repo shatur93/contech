@@ -32,13 +32,31 @@ namespace llvm {
         return false;
     }
 
+    void AAPass::CompareInstructions(vector<pair<Value*, Value*>> &contechAliasPairs) {
+        errs() << "ContechAliasPairs" << "\n";
+        //for (auto elem : P->MustAliasPairs){
+            //TODO - comparison not working, Contech seems to be modifying the
+            //program
+            for (auto contech_elem: contechAliasPairs) {
+                //if (elem == contech_elem) {
+                    errs() << *contech_elem.first << *contech_elem.second << "\n";
+                //}
+            }
+            errs() << "\n";
+        //}
+        P.reset();
+    }
+
     //Invoke destructor
     bool AAPass::DumpPassOutput() {
+        errs() << "MustAliasPairs" << "\n";
         for (auto elem : P->MustAliasPairs){
-            errs() << *elem.first << *elem.second << "\n";
+            errs() << *elem.first << *elem.second << "\n" ;
         }
-        P.reset();
+        errs() << "\n";
+        //P.reset();
         return false;
     } 
+
 };
 

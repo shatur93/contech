@@ -14,6 +14,7 @@
 #include <fstream>
 #include <unordered_set>
 #include <unordered_map>
+#include <vector>
 #include <cxxabi.h>
 #include "../common/eventLib/ct_event_st.h"
 #include "llvm/IR/GetElementPtrTypeIterator.h"
@@ -282,7 +283,9 @@ namespace llvm {
         int chainBufferCalls(Function*, std::map<int, llvm_inst_block>&, int);
         
         virtual bool internalRunOnBasicBlock(BasicBlock &B, Module &M, int bbid, const char* fnName, 
-                                             std::map<int, llvm_inst_block>& costOfBlock, int& num_checks, int& origin_check);
+                                             std::map<int, llvm_inst_block>& costOfBlock, 
+                                             int& num_checks, int& origin_check,
+                                             std::vector<std::pair<Value*, Value*>> &);
         virtual bool internalSplitOnCall(BasicBlock &B, CallInst**, int*);
         void addCheckAfterPhi(BasicBlock* B);
         bool checkAndApplyElideId(BasicBlock* B, uint32_t bbid, std::map<int, llvm_inst_block>& costOfBlock);

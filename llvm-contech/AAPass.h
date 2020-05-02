@@ -31,6 +31,7 @@ namespace llvm {
 
             //Invoke destructor
             bool DumpPassOutput();
+            void CompareInstructions(std::vector<std::pair<Value*, Value*>> &);
         private:
             Contech* ctThis;
     };

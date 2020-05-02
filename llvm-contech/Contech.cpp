@@ -354,6 +354,9 @@ bool Contech::runOnModule(Module &M)
     int length = 0;
     char* buffer = NULL;
     doInitialization(M);
+#ifdef LLVM_ALIAS_PASS
+    vector<pair<Value*, Value*>> ContechAliasPairs;
+#endif
 
     ifstream* icontechStateFile = new ifstream(ContechStateFilename.c_str(), ios_base::in | ios_base::binary);
     if (icontechStateFile != NULL && icontechStateFile->good())
@@ -408,7 +411,7 @@ bool Contech::runOnModule(Module &M)
         else if (classifyFunctionName(fmn) != NONE ||
                  __ctStrCmp(fmn, "__ct") == 0)
         {
-            errs() << "SKIP: " << fmn << "\n";
+            //errs() << "SKIP: " << fmn << "\n";
             if (fmn == fn)
             {
                 free(fn);
@@ -419,7 +422,7 @@ bool Contech::runOnModule(Module &M)
         // then it can be skipped
         else if (contechAddedFunctions.find(&*F) != contechAddedFunctions.end())
         {
-            errs() << "SKIP: " << fmn << "\n";
+            //errs() << "SKIP: " << fmn << "\n";
             if (fmn == fn)
             {
                 free(fn);
@@ -535,10 +538,14 @@ bool Contech::runOnModule(Module &M)
             BasicBlock &pB = *B;
             
             internalRunOnBasicBlock(pB, M, bb_count, fmn, 
-                                    costPerBlock, num_checks, origin_checks);
+                                    costPerBlock, num_checks, origin_checks,
+                                    ContechAliasPairs);
             bb_count++;
         }
 
+#ifdef LLVM_ALIAS_PASS
+        aap->CompareInstructions(ContechAliasPairs);
+#endif
         // run the check analysis
         BufferCheckAnalysis bufferCheckAnalysis{costPerBlock,
                                                 loopExits,
@@ -877,12 +884,13 @@ cleanup:
                     memFlags |= (t->isGlobal)?BBI_FLAG_MEM_GV:0x0;
                     memFlags |= (t->isLoopElide)?BBI_FLAG_MEM_LOOP:0x0;
                 }
-
+                
                 contechStateFile->write((char*)&memFlags, sizeof(char));
                 contechStateFile->write((char*)&t->size, sizeof(char));
                 // Add optional dep mem op info
                 if (t->isDep)
                 {
+                    
                     assert((memFlags & BBI_FLAG_MEM_DUP) == BBI_FLAG_MEM_DUP);
                     if (t->isLoopElide)
                     {
@@ -901,6 +909,9 @@ cleanup:
                     {
                         contechStateFile->write((char*)&t->depMemOp, sizeof(uint16_t));
                         contechStateFile->write((char*)&t->depMemOpDelta, sizeof(int64_t));
+                        //errs() << "******Sha - 1***** " << *(t->addr) << 
+                        //"Dependent Inst" << (t->depMemOp) <<"\n";
+
                     }
                 }
                 else if (t->isCrossPresv)
@@ -1072,7 +1083,9 @@ bool Contech::internalSplitOnCall(BasicBlock &B, CallInst** tci, int* st)
 // For each basic block
 //
 bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const char* fnName, 
-                                      map<int, llvm_inst_block>& costOfBlock, int& num_checks, int& origin_check)
+                                      map<int, llvm_inst_block>& costOfBlock, int& num_checks, 
+                                      int& origin_check, 
+                                      vector<pair<Value*, Value*>> &contechAliasPairs)
 {
     Instruction* iPt = B.getTerminator();
     vector<pllvm_mem_op> opsInBlock;
@@ -1146,10 +1159,11 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
 
             if (addrSimilar != NULL)
             {
-                // errs() << *addrSimilar << " ?=? " << *li << "\t" << addrOffset << "\n";
+                //errs() << *addrSimilar << " ?=? " << *li << "\t" << addrOffset << "\n";
                 dupMemOps[li] = addrSimilar;
                 dupMemOpOff[li] = addrOffset;
                 dupMemOpPos[addrSimilar] = 0;
+                contechAliasPairs.push_back(make_pair(dyn_cast<Value>(li), addrSimilar));
             }
             else if ((addrOffset = is_loop_computable(li, (int*)&addrOffset)) != -1)
             {
@@ -1168,10 +1182,11 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
 
             if (addrSimilar != NULL)
             {
-                // errs() << *addrSimilar << " ?=? " << *si << "\t" << addrOffset << "\n";
+                //errs() << *addrSimilar << " ?=? " << *si << "\t" << addrOffset << "\n";
                 dupMemOps[si] = addrSimilar;
                 dupMemOpOff[si] = addrOffset;
                 dupMemOpPos[addrSimilar] = 0;
+                contechAliasPairs.push_back(make_pair(dyn_cast<Value>(si), addrSimilar));
             }
             else if ((addrOffset = is_loop_computable(si, (int*)&addrOffset)) != -1)
             {
@@ -1449,6 +1464,9 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
             }
 
             tMemOp->addr = li->getPointerOperand();
+            //errs() << "******Sha - 1***** " << (*I) << "\n";
+            /*errs() << "******Sha - 2***** " << *(tMemOp->addr) << 
+                "Dependent Inst " << (tMemOp->isDep) << " " << tMemOp->depMemOpDelta << "\n";*/
             
             unsigned short pos = 0;
             if (bi->first_op == NULL) bi->first_op = tMemOp;
@@ -1517,6 +1535,7 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
             }
 
             tMemOp->addr = si->getPointerOperand();
+            //errs() << "******Sha - 1***** " << (*I) << "\n";
             
             unsigned short pos = 0;
             if (bi->first_op == NULL) bi->first_op = tMemOp;
