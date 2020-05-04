@@ -11,12 +11,12 @@
 using namespace llvm;
 using namespace std;
 
-class AAPass : public FunctionPass {
+class AAIntermediatePass : public FunctionPass {
     std::unique_ptr<AAEval> P;
 public:
     static char ID;
-    AAPass() : FunctionPass(ID) { }
-    ~AAPass() { }
+    AAIntermediatePass() : FunctionPass(ID) { }
+    ~AAIntermediatePass() { }
 
     // We don't modify the program, so we preserve all analyses
     //Run AAResultsWrapper prior to this
@@ -51,5 +51,5 @@ public:
 
 // LLVM uses the address of this static member to identify the pass, so the
 // initialization value is unimportant.
-char AAPass::ID = 0;
-static RegisterPass<AAPass> X("my-aa-pass", "15745: Alias Analysis Detector", false, false);
+char AAIntermediatePass::ID = 0;
+static RegisterPass<AAIntermediatePass> X("my-aa-intermediate-pass", "15745: Intermediate Alias Analysis Pass", false, false);

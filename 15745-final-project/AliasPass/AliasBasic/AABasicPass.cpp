@@ -1,7 +1,3 @@
-// 15-745 S16 Assignment 1: FunctionInfo.cpp
-// Group:
-////////////////////////////////////////////////////////////////////////////////
-
 #include "llvm/Pass.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/InstVisitor.h"
@@ -14,11 +10,11 @@
 using namespace llvm;
 using namespace std;
 
-class FunctionInfo : public FunctionPass {
+class AABasicPass : public FunctionPass {
 public:
     static char ID;
-    FunctionInfo() : FunctionPass(ID) { }
-    ~FunctionInfo() { }
+    AABasicPass() : FunctionPass(ID) { }
+    ~AABasicPass() { }
 
     // We don't modify the program, so we preserve all analyses
     void getAnalysisUsage(AnalysisUsage &AU) const override {
@@ -28,14 +24,11 @@ public:
 
     // Do some initialization
     bool doInitialization(Module &M) override {
-      errs() << "15745 Function Information Pass\n"; // TODO: remove this.
-      // outs() << "Name,\tArgs,\tCalls,\tBlocks,\tInsns\n";
-      //for (Module::iterator F = M.begin(), FE = M.end(); F != FE; ++F) {
+      errs() << "15745 AA Basic Pass\n";
    }
 
     // Print output for each function
     bool runOnFunction(Function &F) override {
-      // outs() << "name" << ",\t" << "args" << ",\t" << "calls" << ",\t" << "bbs" << ",\t" << "insts" << "\n";
       auto AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
       set<Value*> all_addr;
       for (BasicBlock &BB: F) {
@@ -61,14 +54,11 @@ public:
         } 
       }
 
-
-
-
       return false;
    } 
 };
 
 // LLVM uses the address of this static member to identify the pass, so the
 // initialization value is unimportant.
-char FunctionInfo::ID = 0;
-static RegisterPass<FunctionInfo> X("function-info", "15745: Function Information", false, false);
+char AABasicPass::ID = 0;
+static RegisterPass<AABasicPass> X("my-aa-basic-pass", "15745: Basic Alias Analysis Pass", false, false);
