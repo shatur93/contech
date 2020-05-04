@@ -545,7 +545,7 @@ bool Contech::runOnModule(Module &M)
 
 #ifdef LLVM_ALIAS_PASS
         aap->CompareInstructions(ContechAliasPairs);
-#endif
+#else
         // run the check analysis
         BufferCheckAnalysis bufferCheckAnalysis{costPerBlock,
                                                 loopExits,
@@ -765,6 +765,7 @@ bool Contech::runOnModule(Module &M)
         {
             F->setName(Twine("ct_orig_main"));
         }
+#endif
     }
 
     int pathID = bb_count;
@@ -950,7 +951,6 @@ cleanup:
     delete contechStateFile;
 
     errs() << "Tail Dup Count: " << tailCount << "\n";
-    
     return true;
 }
 
@@ -1207,6 +1207,8 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
             getNextI = false;
         }
     }
+
+#ifndef LLVM_ALIAS_PASS
 
     llvm_basic_block* bi = new llvm_basic_block;
     if (bi == NULL)
@@ -1707,6 +1709,8 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
     cfgInfoMap.insert(pair<BasicBlock*, llvm_basic_block*>(&B, bi));
     
     debugLog("Return from BBID: " << bbid);
+
+#endif 
 
     return true;
 }

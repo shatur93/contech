@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <set>
+#include <map>
 
 using namespace llvm;
 using namespace std;
@@ -41,7 +42,7 @@ static cl::opt<bool> PrintMustRef("my-print-mustref", cl::ReallyHidden);
 static cl::opt<bool> PrintMustMod("my-print-mustmod", cl::ReallyHidden);
 static cl::opt<bool> PrintMustModRef("my-print-mustmodref", cl::ReallyHidden);
 
-static cl::opt<bool> EvalAAMD("my-evaluate-aa-metadata", cl::ReallyHidden);
+static cl::opt<bool> EvalAAMD("my-evaluate-aa-metadata");
  
 static void PrintResults(AliasResult AR, bool P, const Value *V1,
                           const Value *V2, const Module *M) {
@@ -55,7 +56,7 @@ static void PrintResults(AliasResult AR, bool P, const Value *V1,
         if (o2 < o1) {
             std::swap(o1, o2);
         }
-        errs() << "  " << AR << ":\t" << o1 << ", " << o2 << "\n";
+        errs() << "  " << AR << ":\t" << *V1 << ", " << *V2 << "\n";
     }
 }
  
@@ -96,6 +97,8 @@ void AAEval::run(Function &F, AAResults &AA) {
     SmallSetVector<CallBase *, 16> Calls;
     SetVector<Value *> Loads;
     SetVector<Value *> Stores;
+
+    map<Value *, size_t> alloc_ptr_to_size;
     
     for (auto &I : F.args()) {
         if (I.getType()->isPointerTy()) {    // Add all pointer arguments
@@ -119,7 +122,6 @@ void AAEval::run(Function &F, AAResults &AA) {
         Instruction &Inst = *I;
         if (auto *Call = dyn_cast<CallBase>(&Inst)) {
             Value *Callee = Call->getCalledValue();
-            
             // Skip actual functions for direct function calls.
             if (!isa<Function>(Callee) && isInterestingPointer(Callee)) {
                 Pointers.insert(Callee);
@@ -142,6 +144,31 @@ void AAEval::run(Function &F, AAResults &AA) {
                 }
             }
         }
+
+        if(CallInst* call_inst = dyn_cast<CallInst>(&Inst)) {
+            Function* fn = call_inst->getCalledFunction();
+            StringRef fn_name = fn->getName();
+
+            if (fn_name.compare(StringRef("malloc")) == 0){
+                Value *v = call_inst->getArgOperand(0);
+                ConstantInt* const_arg = dyn_cast<ConstantInt>(v);
+                if (const_arg != NULL) alloc_ptr_to_size.emplace(&Inst, const_arg->getValue().getLimitedValue());
+
+            } else if (fn_name.compare(StringRef("calloc")) == 0){
+                Value *v0 = call_inst->getArgOperand(0);
+                Value *v1 = call_inst->getArgOperand(1);
+
+                ConstantInt* const_arg0 = dyn_cast<ConstantInt>(v0);
+                ConstantInt* const_arg1 = dyn_cast<ConstantInt>(v1);
+
+                if (const_arg0 != NULL && const_arg1 != NULL){
+                    alloc_ptr_to_size.emplace(&Inst, const_arg0->getValue().getLimitedValue() * 
+                        const_arg1->getValue().getLimitedValue());
+                }
+            }
+   
+            
+        }
     }
  
     if (PrintAll || PrintNoAlias || PrintMayAlias || PrintPartialAlias ||
@@ -155,15 +182,23 @@ void AAEval::run(Function &F, AAResults &AA) {
         I1 != E; ++I1) {
         auto I1Size = LocationSize::unknown();
         Type *I1ElTy = cast<PointerType>((*I1)->getType())->getElementType();
-        if (I1ElTy->isSized()) {
+        
+        auto alloc_it1 = alloc_ptr_to_size.find(*I1);
+        if (alloc_it1 != alloc_ptr_to_size.end()){
+            I1Size = LocationSize::precise(alloc_it1->second);
+        } else if (I1ElTy->isSized()) {
             I1Size = LocationSize::precise(DL.getTypeStoreSize(I1ElTy));
         }
+
         for (SetVector<Value *>::iterator I2 = Pointers.begin(); I2 != I1; ++I2) {
             
             auto I2Size = LocationSize::unknown();
             Type *I2ElTy = cast<PointerType>((*I2)->getType())->getElementType();
 
-            if (I2ElTy->isSized()) {
+            auto alloc_it2 = alloc_ptr_to_size.find(*I2);
+            if (alloc_it2 != alloc_ptr_to_size.end()){
+                I2Size = LocationSize::precise(alloc_it2->second);
+            } else if (I2ElTy->isSized()) {
                 I2Size = LocationSize::precise(DL.getTypeStoreSize(I2ElTy));
             }
 

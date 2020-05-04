@@ -1,19 +1,5 @@
-// struct c {
-//     int d;
-// };
-
-// struct b {
-//     short a;
-//     struct c c_temp;
-// };
-
-// struct hello {
-//     int a;
-//     struct b b_temp;
-// };
-
-// #include <stdio.h>
-// #include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 int main(int argc, char **argv){
     int *x = calloc(4, sizeof(int));
     // int x[3];
@@ -39,6 +25,21 @@ int main(int argc, char **argv){
     //return k + j;
     return x[0] + x[1] + x[2];
 }
+
+// struct c {
+//     int d;
+// };
+
+// struct b {
+//     short a;
+//     struct c c_temp;
+// };
+
+// struct hello {
+//     int a;
+//     struct b b_temp;
+// };
+
 
 // struct A { int x; };
 // struct B { int y; };
