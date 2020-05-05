@@ -213,6 +213,7 @@ void AAEval::run(Function &F, AAResults &AA) {
                     ++MayAliasCount;
                     break;
                 case PartialAlias:
+                    PartialAliasPairs.push_back(make_pair(*I1, *I2));
                     PrintResults(AR, PrintPartialAlias, *I1, *I2, F.getParent());
                     ++PartialAliasCount;
                     break;
@@ -241,6 +242,7 @@ void AAEval::run(Function &F, AAResults &AA) {
                         ++MayAliasCount;
                         break;
                     case PartialAlias:
+                        PartialAliasPairs.push_back(make_pair(Load, Store));
                         PrintLoadStoreResults(AR, PrintPartialAlias, Load, Store, F.getParent());
                         ++PartialAliasCount;
                         break;
@@ -269,6 +271,7 @@ void AAEval::run(Function &F, AAResults &AA) {
                     ++MayAliasCount;
                     break;
                     case PartialAlias:
+                    PartialAliasPairs.push_back(make_pair(*I1, *I2));
                     PrintLoadStoreResults(AR, PrintPartialAlias, *I1, *I2, F.getParent());
                     ++PartialAliasCount;
                     break;

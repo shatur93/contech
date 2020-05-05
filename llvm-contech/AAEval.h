@@ -18,6 +18,7 @@ class AAEval {
  
 public:
     vector<pair<Value*, Value*>> MustAliasPairs;
+    vector<pair<Value*, Value*>> PartialAliasPairs;
 
     AAEval()
        : FunctionCount(), NoAliasCount(), MayAliasCount(), PartialAliasCount(),

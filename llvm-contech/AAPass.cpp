@@ -54,6 +54,14 @@ namespace llvm {
             errs() << *elem.first << *elem.second << "\n" ;
         }
         errs() << "\n";
+
+        errs() << "PartialAliasPairs" << "\n";
+        for (auto elem : P->PartialAliasPairs){
+            errs() << *elem.first << *elem.second << "\n" ;
+        }
+        errs() << "\n";
+
+
         //P.reset();
         return false;
     } 
