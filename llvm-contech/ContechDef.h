@@ -285,14 +285,16 @@ namespace llvm {
         virtual bool internalRunOnBasicBlock(BasicBlock &B, Module &M, int bbid, const char* fnName, 
                                              std::map<int, llvm_inst_block>& costOfBlock, 
                                              int& num_checks, int& origin_check,
-                                             std::vector<std::pair<Value*, Value*>> &);
+                                             std::vector<std::pair<Value*, Value*>> &,
+                                             void *);
         virtual bool internalSplitOnCall(BasicBlock &B, CallInst**, int*);
         void addCheckAfterPhi(BasicBlock* B);
         bool checkAndApplyElideId(BasicBlock* B, uint32_t bbid, std::map<int, llvm_inst_block>& costOfBlock);
         int assignIdToGlobalElide(Constant*, Module&);
         bool attemptTailDuplicate(BasicBlock* bbTail);
         pllvm_mem_op insertMemOp(Instruction* li, Value* addr, bool isWrite, unsigned int memOpPos, 
-                                 Value*, bool elide, Module&, std::map<llvm::Instruction*, int>&);
+                                 Value*, bool elide, Module&, std::map<llvm::Instruction*, int>&,
+                                 void *);
         Value* convertValueToConstantEx(Value*, int64_t*, int64_t*, Value*);
         int64_t updateOffsetEx(gep_type_iterator gepit, int64_t val, int64_t*);
         unsigned int getSizeofType(Type*);

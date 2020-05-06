@@ -539,13 +539,13 @@ bool Contech::runOnModule(Module &M)
             
             internalRunOnBasicBlock(pB, M, bb_count, fmn, 
                                     costPerBlock, num_checks, origin_checks,
-                                    ContechAliasPairs);
+                                    ContechAliasPairs, aap);
             bb_count++;
         }
 
 #ifdef LLVM_ALIAS_PASS
-        aap->CompareInstructions(ContechAliasPairs);
-#else
+        //aap->CompareInstructions(ContechAliasPairs);
+#endif
         // run the check analysis
         BufferCheckAnalysis bufferCheckAnalysis{costPerBlock,
                                                 loopExits,
@@ -765,7 +765,6 @@ bool Contech::runOnModule(Module &M)
         {
             F->setName(Twine("ct_orig_main"));
         }
-#endif
     }
 
     int pathID = bb_count;
@@ -1085,7 +1084,8 @@ bool Contech::internalSplitOnCall(BasicBlock &B, CallInst** tci, int* st)
 bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const char* fnName, 
                                       map<int, llvm_inst_block>& costOfBlock, int& num_checks, 
                                       int& origin_check, 
-                                      vector<pair<Value*, Value*>> &contechAliasPairs)
+                                      vector<pair<Value*, Value*>> &contechAliasPairs,
+                                      void *aap)
 {
     Instruction* iPt = B.getTerminator();
     vector<pllvm_mem_op> opsInBlock;
@@ -1208,7 +1208,7 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
         }
     }
 
-#ifndef LLVM_ALIAS_PASS
+#ifdef LLVM_ALIAS_PASS
 
     llvm_basic_block* bi = new llvm_basic_block;
     if (bi == NULL)
@@ -1420,7 +1420,8 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
 
             if (dupMemOps.find(li) != dupMemOps.end())
             {
-                tMemOp = insertMemOp(NULL, li->getPointerOperand(), false, memOpPos, posValue, elideBasicBlockId, M, loopIVOp);
+                tMemOp = insertMemOp(NULL, li->getPointerOperand(), false, memOpPos, posValue, 
+                                     elideBasicBlockId, M, loopIVOp, aap);
                 
                 tMemOp->isDep = true;
                 tMemOp->depMemOp = dupMemOpPos[dupMemOps.find(li)->second];
@@ -1435,7 +1436,9 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
             else
             {
                 assert(memOpPos < memOpCount);
-                tMemOp = insertMemOp(li, li->getPointerOperand(), false, memOpPos, posValue, elideBasicBlockId, M, loopIVOp);
+                tMemOp = insertMemOp(li, li->getPointerOperand(), false, 
+                                    memOpPos, posValue, elideBasicBlockId, M, 
+                                    loopIVOp, aap);
                 if (tMemOp->isGlobal && tMemOp->isDep)
                 {
                     memOpCount--;
@@ -1491,7 +1494,8 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
 
             if (dupMemOps.find(si) != dupMemOps.end())
             {
-                tMemOp = insertMemOp(NULL, si->getPointerOperand(), true, memOpPos, posValue, elideBasicBlockId, M, loopIVOp);
+                tMemOp = insertMemOp(NULL, si->getPointerOperand(), true, memOpPos, 
+                                     posValue, elideBasicBlockId, M, loopIVOp, aap);
                 
                 tMemOp->isDep = true;
                 tMemOp->depMemOp = dupMemOpPos[dupMemOps.find(si)->second];
@@ -1506,7 +1510,8 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
             else
             {
                 assert(memOpPos < memOpCount);
-                tMemOp = insertMemOp(si, si->getPointerOperand(), true, memOpPos, posValue, elideBasicBlockId, M, loopIVOp);
+                tMemOp = insertMemOp(si, si->getPointerOperand(), true, memOpPos, posValue, 
+                                    elideBasicBlockId, M, loopIVOp, aap);
                 if (tMemOp->isGlobal && tMemOp->isDep)
                 {
                     memOpCount--;

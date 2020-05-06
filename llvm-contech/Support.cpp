@@ -38,6 +38,7 @@
 
 #include "BufferCheckAnalysis.h"
 #include "Contech.h"
+#include "AAPass.h"
 using namespace llvm;
 using namespace std;
 
@@ -326,7 +327,8 @@ int Contech::assignIdToGlobalElide(Constant* consGV, Module &M)
 //  Wrapper call that appropriately adds the operations to record the memory operation
 //
 pllvm_mem_op Contech::insertMemOp(Instruction* li, Value* addr, bool isWrite, unsigned int memOpPos, 
-                                  Value* pos, bool elide, Module &M, map<Instruction*, int>& loopIVOp)
+                                  Value* pos, bool elide, Module &M, map<Instruction*, int>& loopIVOp,
+                                  void *aa_p)
 {
     pllvm_mem_op tMemOp = new llvm_mem_op;
 
@@ -435,6 +437,26 @@ pllvm_mem_op Contech::insertMemOp(Instruction* li, Value* addr, bool isWrite, un
         if (tMemOp->isLoopElide == false)
 #endif
         {
+            //Contech is instrumenting
+#ifdef LLVM_ALIAS_PASS
+            int index;
+            AAPass *aap = (AAPass *)aa_p;
+            errs() << "Alias sets\n";
+            aap->PrintAliasSets();
+            errs() << "\n";
+            if ((index = aap->IsPresentInAASet(addr)) == -1) {
+                errs() << "Either Contech found something AA didnt or the address doesnt Alias" << "\n";
+            }
+            else {
+                if(aap->IsSetVisited(index)) {
+                    errs() << "No need to instrument " << *li << " getOperand() "
+                    << *addr << "\n";
+                }
+                else {
+                    errs() << "Visited set " << index << " first time\n";
+                }
+            }
+#endif
             Constant* cPos = ConstantInt::get(cct.int32Ty, memOpPos);
             Constant* cElide = ConstantInt::get(cct.int8Ty, elide);
             Constant* cPath = ConstantInt::get(cct.int8Ty, 0);
