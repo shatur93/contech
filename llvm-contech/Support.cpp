@@ -451,6 +451,8 @@ pllvm_mem_op Contech::insertMemOp(Instruction* li, Value* addr, bool isWrite, un
                 if(aap->IsSetVisited(index)) {
                     /*errs() << "No need to instrument " << *li << " getOperand() "
                     << *addr << "\n";*/
+                    tMemOp->isDep = true;
+                    return tMemOp;
                 }
                 else {
                     //errs() << "Visited set " << index << " first time\n";
