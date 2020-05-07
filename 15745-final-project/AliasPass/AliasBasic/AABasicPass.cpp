@@ -13,6 +13,9 @@ using namespace std;
 class AABasicPass : public FunctionPass {
 public:
     static char ID;
+    int NoAliasCount = 0;
+    int PartialAliasCount = 0;
+    int MustAliasCount = 0;
     AABasicPass() : FunctionPass(ID) { }
     ~AABasicPass() { }
 
@@ -50,10 +53,20 @@ public:
         for (auto e2 : all_addr){
           if (e1 != e2){
             outs() << *e1 << " " << AA->alias(e1, e2) << " " << *e2 << "\n";
+            if ((AA->alias(e1, e2) == NoAlias) || (AA->alias(e1,e2) == MayAlias)) {
+              NoAliasCount++;
+            }
+            else if (AA->alias(e1, e2) == PartialAlias) {
+              PartialAliasCount++;
+            }
+            else if (AA->alias(e1, e2) == MustAlias) {
+              MustAliasCount++;
+            }
           }
         } 
       }
-
+      outs() << "Must Alias " << MustAliasCount << " PartialAlias " << PartialAliasCount \
+      << " No/MayAlias " << NoAliasCount;
       return false;
    } 
 };

@@ -27,15 +27,15 @@ namespace llvm {
     // Main run function
     bool AAPass::runOnFunction(Function &F) {
         //errs() << F;
-        for (Function::iterator B = F.begin(), BE = F.end(); B != BE; ++B) {
+        /*for (Function::iterator B = F.begin(), BE = F.end(); B != BE; ++B) {
             BasicBlock &pB = *B;
             for (BasicBlock::iterator I = pB.begin(), E = pB.end(); I != E; ++I) {
                 errs() << *I  << " Value " << (dyn_cast<Value>(I)) << "\n";
-                /*if (LoadInst *li = dyn_cast<LoadInst>(I)) {
+                if (LoadInst *li = dyn_cast<LoadInst>(I)) {
                     errs() << "Load instruction" << li->getPointerOperand() << "\n";
-                }*/
+                }
             }
-        }
+        }*/
         auto LI = ctThis->getAnalysisAliasInfo(F);
         P->run(F, *LI);
         return false;
@@ -95,19 +95,19 @@ namespace llvm {
 
     //Invoke destructor
     bool AAPass::DumpPassOutput() {
-        errs() << "MustAliasPairs" << "\n";
+        //errs() << "MustAliasPairs" << "\n";
         for (auto elem : P->MustAliasPairs){
-            errs() << *elem.first << *elem.second << "\n" ;
+            //errs() << *elem.first << *elem.second << "\n" ;
             AddToSet(elem.first, elem.second);
         }
-        errs() << "\n";
+        //errs() << "\n";
 
-        errs() << "PartialAliasPairs" << "\n";
+        //errs() << "PartialAliasPairs" << "\n";
         for (auto elem : P->PartialAliasPairs){
-            errs() << *elem.first << *elem.second << "\n" ;
+            //errs() << *elem.first << *elem.second << "\n" ;
             AddToSet(elem.first, elem.second);
         }
-        errs() << "\n";
+        //errs() << "\n";
         //PrintAliasSets();
         VisitedAliasSets.resize(AliasSetVector.size());
         for (int i = 0; i < VisitedAliasSets.size(); i++) {
@@ -119,7 +119,7 @@ namespace llvm {
 
     int AAPass::IsPresentInAASet(Value *addr) {
         for (int i = 0; i < AliasSetVector.size(); i++) {
-            errs() << "Set " << i << "\n";
+            //errs() << "Set " << i << "\n";
             if (AliasSetVector[i].find(addr) != AliasSetVector[i].end()) {
                 return i;
             }

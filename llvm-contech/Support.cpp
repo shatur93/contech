@@ -441,19 +441,19 @@ pllvm_mem_op Contech::insertMemOp(Instruction* li, Value* addr, bool isWrite, un
 #ifdef LLVM_ALIAS_PASS
             int index;
             AAPass *aap = (AAPass *)aa_p;
-            errs() << "Alias sets\n";
+            /*errs() << "Alias sets\n";
             aap->PrintAliasSets();
-            errs() << "\n";
+            errs() << "\n";*/
             if ((index = aap->IsPresentInAASet(addr)) == -1) {
-                errs() << "Either Contech found something AA didnt or the address doesnt Alias" << "\n";
+                //errs() << "Either Contech found something AA didnt or the address doesnt Alias" << "\n";
             }
             else {
                 if(aap->IsSetVisited(index)) {
-                    errs() << "No need to instrument " << *li << " getOperand() "
-                    << *addr << "\n";
+                    /*errs() << "No need to instrument " << *li << " getOperand() "
+                    << *addr << "\n";*/
                 }
                 else {
-                    errs() << "Visited set " << index << " first time\n";
+                    //errs() << "Visited set " << index << " first time\n";
                 }
             }
 #endif

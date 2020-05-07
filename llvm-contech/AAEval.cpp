@@ -147,27 +147,27 @@ void AAEval::run(Function &F, AAResults &AA) {
 
         if(CallInst* call_inst = dyn_cast<CallInst>(&Inst)) {
             Function* fn = call_inst->getCalledFunction();
-            StringRef fn_name = fn->getName();
+            if (fn != NULL) {
+                StringRef fn_name = fn->getName();
 
-            if (fn_name.compare(StringRef("malloc")) == 0){
-                Value *v = call_inst->getArgOperand(0);
-                ConstantInt* const_arg = dyn_cast<ConstantInt>(v);
-                if (const_arg != NULL) alloc_ptr_to_size.emplace(&Inst, const_arg->getValue().getLimitedValue());
+                if (fn_name.compare(StringRef("malloc")) == 0){
+                    Value *v = call_inst->getArgOperand(0);
+                    ConstantInt* const_arg = dyn_cast<ConstantInt>(v);
+                    if (const_arg != NULL) alloc_ptr_to_size.emplace(&Inst, const_arg->getValue().getLimitedValue());
 
-            } else if (fn_name.compare(StringRef("calloc")) == 0){
-                Value *v0 = call_inst->getArgOperand(0);
-                Value *v1 = call_inst->getArgOperand(1);
+                } else if (fn_name.compare(StringRef("calloc")) == 0){
+                    Value *v0 = call_inst->getArgOperand(0);
+                    Value *v1 = call_inst->getArgOperand(1);
 
-                ConstantInt* const_arg0 = dyn_cast<ConstantInt>(v0);
-                ConstantInt* const_arg1 = dyn_cast<ConstantInt>(v1);
+                    ConstantInt* const_arg0 = dyn_cast<ConstantInt>(v0);
+                    ConstantInt* const_arg1 = dyn_cast<ConstantInt>(v1);
 
-                if (const_arg0 != NULL && const_arg1 != NULL){
-                    alloc_ptr_to_size.emplace(&Inst, const_arg0->getValue().getLimitedValue() * 
-                        const_arg1->getValue().getLimitedValue());
+                    if (const_arg0 != NULL && const_arg1 != NULL){
+                        alloc_ptr_to_size.emplace(&Inst, const_arg0->getValue().getLimitedValue() * 
+                            const_arg1->getValue().getLimitedValue());
+                    }
                 }
-            }
-   
-            
+            }      
         }
     }
  
