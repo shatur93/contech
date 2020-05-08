@@ -66,7 +66,7 @@ public:
         } 
       }
       outs() << "Must Alias " << MustAliasCount << " PartialAlias " << PartialAliasCount \
-      << " No/MayAlias " << NoAliasCount;
+      << " No/MayAlias " << NoAliasCount << "\n";
       return false;
    } 
 };

@@ -26,38 +26,22 @@ namespace llvm {
 
     // Main run function
     bool AAPass::runOnFunction(Function &F) {
-        //errs() << F;
-        /*for (Function::iterator B = F.begin(), BE = F.end(); B != BE; ++B) {
-            BasicBlock &pB = *B;
-            for (BasicBlock::iterator I = pB.begin(), E = pB.end(); I != E; ++I) {
-                errs() << *I  << " Value " << (dyn_cast<Value>(I)) << "\n";
-                if (LoadInst *li = dyn_cast<LoadInst>(I)) {
-                    errs() << "Load instruction" << li->getPointerOperand() << "\n";
-                }
-            }
-        }*/
         auto LI = ctThis->getAnalysisAliasInfo(F);
         P->run(F, *LI);
         return false;
     }
 
-    void AAPass::CompareInstructions(vector<pair<Value*, Value*>> &contechAliasPairs) {
+    void AAPass::PrintContechInstructions(vector<pair<Value*, Value*>> &contechAliasPairs) {
         errs() << "ContechAliasPairs" << "\n";
-        //for (auto elem : P->MustAliasPairs){
-            //TODO - comparison not working, Contech seems to be modifying the
-            //program
             for (auto contech_elem: contechAliasPairs) {
-                //if (elem == contech_elem) {
                     errs() << *(contech_elem.first) 
                         << *contech_elem.second << "\n";
-                //}
             }
             errs() << "\n";
-        //}
         P.reset();
     }
 
-    //Add instructions to set
+    //Add instructions to Alias Set
     void AAPass::AddToSet(Value *first, Value *second) {
         for (int i = 0; i < AliasSetVector.size(); i++) {
             if ((AliasSetVector[i].find(first) != AliasSetVector[i].end()) && 
@@ -93,33 +77,27 @@ namespace llvm {
         }
     }
 
-    //Invoke destructor
+    //Creates Alias sets on Must Alias and Partial Alias instructions
     bool AAPass::DumpPassOutput() {
-        //errs() << "MustAliasPairs" << "\n";
         for (auto elem : P->MustAliasPairs){
-            //errs() << *elem.first << *elem.second << "\n" ;
             AddToSet(elem.first, elem.second);
         }
-        //errs() << "\n";
 
-        //errs() << "PartialAliasPairs" << "\n";
         for (auto elem : P->PartialAliasPairs){
-            //errs() << *elem.first << *elem.second << "\n" ;
             AddToSet(elem.first, elem.second);
         }
-        //errs() << "\n";
-        //PrintAliasSets();
+
         VisitedAliasSets.resize(AliasSetVector.size());
         for (int i = 0; i < VisitedAliasSets.size(); i++) {
             VisitedAliasSets[i] = false;
         }
-        //P.reset();
         return false;
     } 
 
+    //check to see if this instruction is already part
+    //of an alias set. Return the set if found
     int AAPass::IsPresentInAASet(Value *addr) {
         for (int i = 0; i < AliasSetVector.size(); i++) {
-            //errs() << "Set " << i << "\n";
             if (AliasSetVector[i].find(addr) != AliasSetVector[i].end()) {
                 return i;
             }
@@ -127,6 +105,7 @@ namespace llvm {
         return -1;   
     }
 
+    //Check to see if an instruction from this set index is already visited
     bool AAPass::IsSetVisited(int i) {
         if (VisitedAliasSets[i]) {
             return true;

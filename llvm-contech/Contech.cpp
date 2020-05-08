@@ -1457,9 +1457,6 @@ bool Contech::internalRunOnBasicBlock(BasicBlock &B,  Module &M, int bbid, const
                     memOpCount--;
                     // memOpPos ++;
                 }
-                else if (tMemOp->isDep) {
-                    memOpCount--;
-                }
                 else
                 {
                     memOpPos ++;

@@ -35,7 +35,7 @@ namespace llvm {
 
             //Invoke destructor
             bool DumpPassOutput();
-            void CompareInstructions(std::vector<std::pair<Value*, Value*>> &);
+            void PrintContechInstructions(std::vector<std::pair<Value*, Value*>> &);
             void AddToSet(Value *, Value *);
             void PrintAliasSets();
             int IsPresentInAASet(Value *addr);
